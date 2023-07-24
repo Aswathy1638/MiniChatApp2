@@ -15,6 +15,7 @@ namespace MiniChatApp2.Data
         }
 
         public DbSet<User> User { get; set; }
+        public DbSet<Message> Message { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()
@@ -22,7 +23,20 @@ namespace MiniChatApp2.Data
                 .ValueGeneratedOnAdd();
 
             modelBuilder.Entity<User>().ToTable("User");
+            modelBuilder.Entity<Message>().ToTable("Message");
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Message>()
+               .HasOne(m => m.sender)
+               .WithMany()
+               .HasForeignKey(m => m.senderId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.receiver)
+                .WithMany()
+                .HasForeignKey(m => m.receiverId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
