@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MiniChatApp2.Data;
 
@@ -11,9 +12,11 @@ using MiniChatApp2.Data;
 namespace MiniChatApp2.Migrations
 {
     [DbContext(typeof(MiniChatApp2Context))]
-    partial class MiniChatApp2ContextModelSnapshot : ModelSnapshot
+    [Migration("20230725075616_CreateLogsTable")]
+    partial class CreateLogsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

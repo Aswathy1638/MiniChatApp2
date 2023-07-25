@@ -36,24 +36,50 @@ namespace MiniChatApp2.Controllers
         }
 
         // GET: api/Messages/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Message>> GetMessage(int id)
-        {
-          if (_context.Message == null)
-          {
-              return NotFound();
-          }
-            var message = await _context.Message.FindAsync(id);
+      
 
-            if (message == null)
+        
+        [HttpGet("{id}")]
+
+        public async Task<IActionResult> GetMessage(int id)
+        {
+
+            if (!ModelState.IsValid)
             {
-                return NotFound();
+                return BadRequest(new { message = "invalid request parameter." });
             }
 
-            return message;
+            var currentId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var currentTime = DateTime.Now;
+
+            //var count  = history.count;
+
+            var messages = _context.Message
+                .Where(u => (u.senderId == Convert.ToInt32(currentId) && u.receiverId == id) ||
+                            (u.senderId == id && u.receiverId == Convert.ToInt32(currentId)))
+          
+                .Select(u => new
+                {
+                    id = u.Id,
+                    senderId = u.senderId,
+                    receiverId = u.receiverId,
+                    content = u.Content,
+                    timestamp = u.Timestamp
+                })
+                .ToList();
+
+
+            if (messages == null)
+            {
+                return NotFound(new { message = "User or conversation not found" });
+            }
+
+            return Ok(messages);
         }
 
-      
+
+
         [HttpPut("{id}")]
         public async Task<IActionResult> PutMessage(int id, MessageEditDto message)
         {

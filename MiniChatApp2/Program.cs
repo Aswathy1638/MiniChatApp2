@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using MiniChatApp2.Data;
+using MiniChatApp2.Middlewares;
 using System.Text;
 
 namespace MiniChatApp2
@@ -15,6 +16,8 @@ namespace MiniChatApp2
             builder.Services.AddDbContext<MiniChatApp2Context>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("MiniChatApp2Context") ));
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+            builder.Services.AddScoped<Middleware>();
             // Add services to the container.
 
             builder.Services.AddControllers();
@@ -58,13 +61,13 @@ namespace MiniChatApp2
                 context.Database.EnsureCreated();
                 // DbInitializer.Initialize(context);
             }
-
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
 
+            app.UseMiddleware<Middleware>();
             
             app.MapControllers();
 
