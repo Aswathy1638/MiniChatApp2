@@ -43,22 +43,17 @@ namespace MiniChatApp2.Controllers
 
         public async Task<IActionResult> GetMessage(int id)
         {
-
             if (!ModelState.IsValid)
             {
-                return BadRequest(new { message = "invalid request parameter." });
+                return BadRequest(new { message = "Invalid request parameter." });
             }
 
             var currentId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var currentUserId = Convert.ToInt32(currentId);
 
-            var currentTime = DateTime.Now;
-
-            //var count  = history.count;
-
-            var messages = _context.Message
-                .Where(u => (u.senderId == Convert.ToInt32(currentId) && u.receiverId == id) ||
-                            (u.senderId == id && u.receiverId == Convert.ToInt32(currentId)))
-          
+            // Fetch messages sent by the current user
+            var sentMessages = await _context.Message
+                .Where(u => u.senderId == currentUserId && u.receiverId == id)
                 .Select(u => new
                 {
                     id = u.Id,
@@ -67,10 +62,25 @@ namespace MiniChatApp2.Controllers
                     content = u.Content,
                     timestamp = u.Timestamp
                 })
-                .ToList();
+                .ToListAsync();
 
+            // Fetch messages received by the current user
+            var receivedMessages = await _context.Message
+                .Where(u => u.senderId == id && u.receiverId == currentUserId)
+                .Select(u => new
+                {
+                    id = u.Id,
+                    senderId = u.senderId,
+                    receiverId = u.receiverId,
+                    content = u.Content,
+                    timestamp = u.Timestamp
+                })
+                .ToListAsync();
 
-            if (messages == null)
+            // Combine sent and received messages into a single list
+            var messages = sentMessages.Union(receivedMessages).ToList();
+
+            if (messages == null || messages.Count == 0)
             {
                 return NotFound(new { message = "User or conversation not found" });
             }
