@@ -53,49 +53,34 @@ namespace MiniChatApp2.Controllers
             return message;
         }
 
+      
         [HttpPut("{id}")]
-     
-        public async Task<IActionResult> PutMessage(int messageId, MessageEditDto messageDto)
+        public async Task<IActionResult> PutMessage(int id, MessageEditDto message)
         {
-            // Get the current user's ID from the claims
-            var currentUserId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var messages = await _context.Message.FirstOrDefaultAsync(u => u.Id == id);
 
-            // Check if the user is authenticated
-            if (!HttpContext.User.Identity.IsAuthenticated)
+            if (!ModelState.IsValid)
             {
-                return Unauthorized(new { error = "Unauthorized access" });
+                return BadRequest(new { message = "Invalid Credentials" });
             }
 
-            // Find the message to be edited
-            var message = await _context.Message.FindAsync(messageId);
-
-            // Check if the message exists
-            if (message == null)
+            if (Convert.ToInt32(userId) != messages.senderId)
             {
-                return NotFound(new { error = "Message not found" });
+                return Unauthorized(new { message = "Unauthorized access" });
             }
 
-            // Check if the user is the sender of the message
-            if (message.senderId != int.Parse(currentUserId))
+
+
+            if (messages == null)
             {
-                return Unauthorized(new { error = "Unauthorized to edit this message" });
+                return NotFound(new { message = "message not found" });
             }
 
-            // Update the message content
-            message.Content = messageDto.Content;
-
-            // Save changes to the database
+            messages.Content = message.Content;
             await _context.SaveChangesAsync();
 
-            // Return successful response
-            return Ok(new
-            {
-                messageId = message.Id,
-                senderId = message.senderId,
-                receiverId = message.receiverId,
-                content = message.Content,
-                timestamp = message.Timestamp
-            });
+            return Ok(new { message = "Message edited successfully" });
         }
 
         /*
@@ -149,7 +134,7 @@ namespace MiniChatApp2.Controllers
 
 
 
-       
+
         [HttpPost]
         public async Task<ActionResult<MessageResponse>> PostMessage(MessageCreateDto message)
         {
@@ -203,23 +188,31 @@ namespace MiniChatApp2.Controllers
 
         // DELETE: api/Messages/5
         [HttpDelete("{id}")]
+     
         public async Task<IActionResult> DeleteMessage(int id)
         {
-            if (_context.Message == null)
-            {
-                return NotFound();
-            }
+            var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            // Check if the message exists
             var message = await _context.Message.FindAsync(id);
             if (message == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Message not found" });
             }
 
+            // Check if the current user is the sender of the message
+            if (Convert.ToInt32(userId) != message.senderId)
+            {
+                return Unauthorized(new { error = "You are not authorized to delete this message" });
+            }
+
+            // Delete the message and save changes
             _context.Message.Remove(message);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { message = "Message deleted successfully" });
         }
+
 
         private bool MessageExists(int id)
         {
