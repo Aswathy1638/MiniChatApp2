@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniChatApp2.Data;
 using MiniChatApp2.Model;
+using static MiniChatApp2.Model.MessageResponseDto;
 
 namespace MiniChatApp2.Controllers
 {
@@ -17,7 +18,7 @@ namespace MiniChatApp2.Controllers
     public class MessagesController : ControllerBase
     {
         private readonly MiniChatApp2Context _context;
-
+        private static readonly List<Message> _messages = new List<Message>();
         public MessagesController(MiniChatApp2Context context)
         {
             _context = context;
@@ -147,27 +148,56 @@ namespace MiniChatApp2.Controllers
          }*/
 
 
+
+       
         [HttpPost]
-        public async Task<ActionResult<Message>> PostMessage(Message message)
+        public async Task<ActionResult<MessageResponse>> PostMessage(MessageCreateDto message)
         {
-            if (!ModelState.IsValid) 
+            if (!ModelState.IsValid)
             {
-                return BadRequest(new { message = "message sending failed due to validation errors." }); 
+                return BadRequest(new { message = "Message sending failed due to validation errors." });
             }
-            var currentUser = HttpContext.User; var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            message.senderId = Convert.ToInt32(userId); message.Timestamp = DateTime.Now;
+            var currentUser = HttpContext.User;
+            var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Console.WriteLine(userId);
 
-            _context.Message.Add(message); await _context.SaveChangesAsync();
+            // Check if the sender user exists
+            var senderUser = await _context.User.FindAsync(Convert.ToInt32(userId));
+            if (senderUser == null)
+            {
+                return NotFound(new { error = "Sender user not found." });
+            }
 
-            var messageResponse = new MessageCreateDto 
-            { 
-                ReceiverId = message.receiverId, 
-                Content = message.Content
+            // Check if the receiver user exists
+            var receiverUser = await _context.User.FindAsync(message.ReceiverId);
+            if (receiverUser == null)
+            {
+                return NotFound(new { error = "Receiver user not found." });
+            }
+
+            var messageEntity = new Message
+            {
+                senderId = Convert.ToInt32(userId),
+                receiverId = message.ReceiverId,
+                Content = message.Content,
+                Timestamp = DateTime.Now
             };
+
+            _context.Message.Add(messageEntity);
+            await _context.SaveChangesAsync();
+
+            var messageResponse = new MessageResponse
+            {
+                MessageId = messageEntity.Id,
+                SenderId = messageEntity.senderId,
+                ReceiverId = messageEntity.receiverId,
+                Content = messageEntity.Content,
+                Timestemp = messageEntity.Timestamp,
+            };
+
             return Ok(messageResponse);
         }
-
 
 
 

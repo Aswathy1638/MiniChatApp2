@@ -239,7 +239,7 @@ namespace MiniChatApp2.Controllers
             }
         }
 
-        private string GenerateJwtToken(int id, string name, string email)
+       /* private string GenerateJwtToken(int id, string name, string email)
         {
             var claims = new List<Claim>
     {
@@ -260,8 +260,31 @@ namespace MiniChatApp2.Controllers
             string tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
             return tokenString;
-        }
+        }*/
 
+
+        private string GenerateJwtToken(int id, string name, string email)
+        {
+            var claims = new[] {
+                new Claim(ClaimTypes.NameIdentifier, id.ToString()),
+                new Claim(ClaimTypes.Name, name),
+                new Claim(ClaimTypes.Email, email)
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var token = new JwtSecurityToken(
+                _configuration["Jwt:Issuer"],
+                _configuration["Jwt:Audience"],
+                claims,
+                expires: DateTime.UtcNow.AddMinutes(10),
+                signingCredentials: signIn);
+
+
+            string Token = new JwtSecurityTokenHandler().WriteToken(token);
+
+            return Token;
+        }
 
         private string HashPassword(string password)
         {
