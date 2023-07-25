@@ -16,6 +16,7 @@ namespace MiniChatApp2.Data
 
         public DbSet<User> User { get; set; }
         public DbSet<Message> Message { get; set; }
+        public DbSet<Logs>Logs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()
