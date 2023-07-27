@@ -165,13 +165,12 @@ namespace MiniChatApp2.Controllers
             {
                 return Conflict(new { error = "Registration failed because the email is already registered" });
             }
-
-            // Generate a unique user ID (using auto-incrementing int)
-            // Since EF Core and the database handle this, we don't need to manually generate it.
-            // The UserId property will be auto-generated in the database.
+            Console.WriteLine(model.Password);
 
             // Hash the password securely before storing it in the database
             var hashedPassword = HashPassword(model.Password);
+
+            Console.WriteLine(hashedPassword);
 
             // Create the user object
             var user = new User

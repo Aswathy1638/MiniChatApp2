@@ -53,6 +53,8 @@ namespace MiniChatApp2
                 app.UseDeveloperExceptionPage();
                 app.UseMigrationsEndPoint();
             }
+            app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
