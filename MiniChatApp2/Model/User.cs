@@ -13,6 +13,7 @@ namespace MiniChatApp2.Model
         [Required]
         public string Password { get; set; }
         public string? Token { get; set; }
+        //Git test
 
     }
 }
